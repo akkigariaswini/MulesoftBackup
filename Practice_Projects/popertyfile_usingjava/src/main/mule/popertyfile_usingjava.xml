@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="e6e2f33d-3e5b-4148-b1bf-aa1fe6213a5c" file="java.properties" />
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="791faff9-5288-4e15-b4fa-732ea588800b" >
+		<http:listener-connection host="0.0.0.0" port="${port}" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="fb20788c-2c60-40de-8e13-62cbdd375577" >
+		<salesforce:basic-connection username="${userName}" password="${password}" securityToken="${securityToken}" url="${url}" />
+	</salesforce:sfdc-config>
+	<flow name="popertyfile_usingjavaFlow" doc:id="ac2720a8-1751-4205-bea2-d8752165fd69" >
+		<http:listener doc:name="Listener" doc:id="6fb527a2-4441-410c-92a9-aae713b61c39" path="${path}" config-ref="HTTP_Listener_config"/>
+		<set-payload value="This is used  to test property file using java" doc:name="Set Payload" doc:id="7cb642e1-16fd-479d-ae55-ad1de7a92ba1" />
+		<salesforce:query doc:name="Query" doc:id="85d4841f-71c7-45ff-8262-8acc42a77e8d" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT Id,FirstName, LastName, Email, Phone, Salutation, Account.Name, Birthdate, Department, Title, AuraComponents__legacy_id__c from Contact limit 10]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="a4695951-ef9a-42f1-a1c6-112818cc68c5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+	payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

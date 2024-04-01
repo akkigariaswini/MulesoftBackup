@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="Test" format="csv">
+      <types:shape format="weave" example="examples/Assignment.csv"><![CDATA[%dw 2.0
+
+type Test = Array<{|  id: String,   FirstName: String,   LastName: String,   Email: String,   Phone: String,   Salutation: String,   "Account.Name": String,   Birthdate: String,   Department: String,   Title: String,   "AuraComponents__legacy_id__c ": String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#15a31a16-136c-4dff-ba1d-9c3e429e4f03">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Test"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Test"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="f648709c-13f3-4da7-90f9-61ddb957c9b4" >
+		<http:listener-connection host="0.0.0.0" port="8081"/>
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="972cc989-d1da-46fd-b3a2-a43a274e5dec">
+		<http:request-connection protocol="HTTPS" host="portal.kairakitchen.com" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="9121340a-d467-49b3-abe2-8e240bc40e22">
+		<http:request-connection protocol="HTTPS" host="portal.kairakitchen.com" />
+	</http:request-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="a50941f5-ccaf-4879-bab0-d1012d0f84f2" >
+		<salesforce:basic-connection username="akkigariaswini33@gmail.com" password="Aswini@2001" securityToken="Wxsl56GLiPn2pseAX992eT01" url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<flow name="create_kirakitchen_recordsFlow" doc:id="b31bccc5-441a-4190-ab5f-4095f2958f4c" >
+		<http:listener doc:name="Listener" doc:id="b91558ea-4740-4895-b7f2-f0b5d08efefa" config-ref="HTTP_Listener_config" path="/getkirakitchenrecords"/>
+		<http:request method="POST" doc:name="Request" doc:id="b27c54ea-9b68-4d69-878f-e7fa679dae0e" config-ref="HTTP_Request_configuration" path="/ibs/api/auth/login">
+			<http:body ><![CDATA[#[output application/json
+---
+{
+	"password" : "Admin@123",
+	"email" : "zakir@gmail.com"
+		
+}]]]></http:body>
+		</http:request>
+		<http:request method="GET" doc:name="Request" doc:id="b78a0397-cbe3-48e7-bb1d-84195ba285d8" config-ref="HTTP_Request_configuration1" path="/ibs/api/contacts/clients">
+			<http:headers ><![CDATA[#[output application/json
+---
+{
+  "Authorization" :payload.authToken
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="0211ab24-f8a0-4442-b66d-d42fca3995d3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json skipNullOn="everywhere"
+---
+payload map((item,index) ->
+if(item.location == "Jaipur")({
+	"FirstName":item.firstname,
+	"LastName":item.lastname,
+	"MailingCity": item.city,
+	"AuraComponents__branch__c	": item.location,
+	"AuraComponents__legacy_id__c":item.id
+	})else(null))]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create doc:name="Create" doc:id="64bf7629-0cb2-443c-9305-de7c761e10ff" config-ref="Salesforce_Config" type="Contact">
+			<salesforce:records ><![CDATA[#[%dw 2.0
+output application/json skipNullOn="everywhere"
+---
+payload]]]></salesforce:records>
+		</salesforce:create>
+	</flow>
+</mule>

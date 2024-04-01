@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="Account" format="csv">
+      <types:shape format="weave" example="examples/Asssignment.csv"><![CDATA[%dw 2.0
+
+type Account = Array<{|  Id: String,   Name: String,   Email: String,   Phone: String,   Address: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#88dd1a1e-476a-4858-b983-7dd5837c7626">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Account"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

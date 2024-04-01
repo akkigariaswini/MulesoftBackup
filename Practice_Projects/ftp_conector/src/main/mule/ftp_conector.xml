@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="7acbb422-ec33-42df-8d2f-7d597bf141e4" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<ftp:config name="FTP_Config" doc:name="FTP Config" doc:id="fcc172a1-f7eb-44c5-a07f-25da0e98ec6c" >
+		<ftp:connection host="localhost" username="Test-User" password="Test-User" />
+	</ftp:config>
+	  <salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="46c72dea-57b2-4f04-9a5d-fbb6d53be01d">
+        <salesforce:basic-connection username="akkigariaswini33@gmail.com" password="Aswini@2001" securityToken="Wxsl56GLiPn2pseAX992eT01" url="https://login.salesforce.com/services/Soap/u/55.0" />
+    </salesforce:sfdc-config>
+
+    <flow name="ftp_connectorFlow" doc:id="f295a180-805a-40a5-a634-e29cee0501d0">
+        <http:listener doc:name="Listener" doc:id="397e181f-068a-41e6-8f00-4e4353cd8939" config-ref="HTTP_Listener_config" path="/FTP" />
+        <salesforce:query doc:name="Query" doc:id="f2ea56f2-b1e7-4754-a994-8c2135c0a5ed" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[select Id,FirstName,LastName from Contact]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="0531304a-8c4d-4699-9642-0a6032e333a2">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload map {
+    Id: $.Id,
+    FirstName: $.FirstName,
+    LastName: $.LastName
+}
+]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <logger level="INFO" doc:name="Logger" doc:id="2de65fd3-e3c0-42ea-bf2d-4146dd8a7afa" message="#[payload]" />
+        <ftp:write doc:name="Write" doc:id="32f15fa1-edc7-46b1-8b0e-9742739fdd8c" config-ref="FTP_Config" path="outputThree.csv" />
+        <logger level="INFO" doc:name="Logger" doc:id="f0bb39cf-58c1-4b9d-90b5-e5ac086864f2" message="payload" />
+    </flow>
+</mule>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="fad0745d-965b-4ad6-9c72-7b16d913ec0c" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="MainFlow" doc:id="a488230f-c04e-4057-bd98-1395ab0340e7" >
+		<http:listener doc:name="Listener" doc:id="3e6cc5cb-e2df-4730-bdec-54fe987ef1ae" config-ref="HTTP_Listener_config" path="/flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7b42a0be-3f8d-4eba-adc6-f4aeb4f97501" message="This is from main flow"/>
+		<set-payload value="This is from main flow payload activity" doc:name="Set Payload" doc:id="b59b1b9a-1c00-4eff-afb7-48bae9b1fc65" />
+		<flow-ref doc:name="Flow Reference" doc:id="e4e7e807-9ac3-406d-b612-ccd1a525e76a" name="privateflow"/>
+	</flow>
+	<flow name="privateflow" doc:id="1f72ac7c-04fe-4a65-829f-a766d667b5b9" >
+		<logger level="INFO" doc:name="Logger" doc:id="4b1bfce0-e87e-430c-a2ce-07c146317c59" message="This is from private flow"/>
+		<set-payload value="This is from private flow payload activity" doc:name="Set Payload" doc:id="1cf7e020-0bd6-4a5c-9b08-0406cb4ed863" />
+	</flow>
+	<flow name="demo_flowFlow" doc:id="ca141fa6-15f5-40ab-9c48-ec9b782300f9" />
+	<sub-flow name="demo_flowSub_Flow" doc:id="25f48125-9046-4dcc-80c1-4140560363b2" />
+	<sub-flow name="subflow" doc:id="640c5b58-d480-4aaa-b327-c9e8b1ddaf14" >
+		<try doc:name="Try" doc:id="b681b0d1-36f6-419a-a669-413e9069ceac" >
+			<logger level="INFO" doc:name="Logger" doc:id="8107f8a5-24fe-4bff-8b35-52cac72bf5d3" message="this is from subflow" />
+			<set-payload value="This is from subflow payload activity" doc:name="Set Payload" doc:id="f596e6d9-61ad-4fe6-9064-c3bb6b9328b9" />
+		</try>
+	</sub-flow>
+</mule>

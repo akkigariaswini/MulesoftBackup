@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="2042b5de-4e97-4082-9300-f54249bbabb0" >
+		<http:listener-connection host="localhost" port="${port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="7fcfec69-87e1-4068-bf3d-109aaa9bb383" file="${env}.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="39124b55-5d17-4137-bde0-32a68f8078e0" file="test.properties" />
+	<flow name="property_file_exampleFlow" doc:id="6eb0c84e-7a7d-4be0-8c96-15ae346c3112" >
+		<http:listener doc:name="Listener" doc:id="ea53ba37-1c83-4a76-bdfb-55b9297723a1" path="${http.path}" config-ref="HTTP_Listener_config"/>
+		<set-payload value="This is used  to test property file using yaml" doc:name="Set Payload" doc:id="b7c5235d-a4cb-4f28-9b71-70ab92fffd55" />
+	</flow>
+</mule>

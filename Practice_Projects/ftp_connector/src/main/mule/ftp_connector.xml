@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<ftp:config name="FTP_Config" doc:name="FTP Config" doc:id="1cced7fc-726c-452f-bd8b-c9962bc20947" >
+		<ftp:connection host="localhost" username="Aswini" password="Test" />
+	</ftp:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d7f120a7-e6d5-4aea-aaa7-369093582297" >
+		<http:listener-connection host="0.0.0.0" port="8088" />
+	</http:listener-config>
+	<flow name="ftp_connectorFlow1" doc:id="c54762fb-cd01-4d9f-b6fe-1d095b8d7124" >
+		<http:listener doc:name="Listener" doc:id="fe96a884-ba50-46c7-88f8-99f8ad9e0b1a" config-ref="HTTP_Listener_config" path="/FTP"/>
+		<ftp:read doc:name="Read" doc:id="867b40bd-a18c-410c-8345-a5d8c20d7b8d" path="C:\Users\ibirds\Desktop\Learning\CSV_To_Json\Assignment.csv" config-ref="FTP_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="24ffbb3a-8690-4c07-be43-e8e6f6ded98e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ftp:write doc:name="Write" doc:id="d534b722-909c-4450-8cc8-9678cc5b064f" config-ref="FTP_Config" path="C:\Users\ibirds\Desktop\Learning\CSV_To_Json\WriteFile"/>
+	</flow>
+	<flow name="ftp_connectorFlow" doc:id="c41cf379-a11d-4abf-a23f-346c9f4a822c" >
+	</flow>
+</mule>

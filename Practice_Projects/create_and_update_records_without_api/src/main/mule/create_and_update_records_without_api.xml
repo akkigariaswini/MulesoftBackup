@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="8790b856-75a1-492c-890e-ec58e518bb05">
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="60b8d371-332c-4cd1-97b8-c949dcef2ece">
+		<salesforce:basic-connection username="your_username" password="your_password" securityToken="your_security_token" url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="ee536d1e-a1ea-403c-8926-4af8718ba587">
+		<file:connection workingDir="C:\Users\ibirds\Desktop\Learning\succesrecords" />
+	</file:config>
+	<flow name="create_records_without_apiFlow" doc:id="878c5be8-fc04-4c9e-b056-bbc2a835c3ae">
+		<http:listener doc:name="Listener" doc:id="798735e6-b927-4176-b791-07a8015f3ee2" config-ref="HTTP_Listener_config" path="/CreateRecords" />
+		<ee:transform doc:name="Transform Message" doc:id="39a0f14a-54d7-40e6-b0c1-c7cba95a41bd">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json 
+---
+payload map (item, index) -> {
+	"AuraComponents__studentId__c": item.studentId,
+	"LastName": item.lastName,
+	"AuraComponents__disability__c": item.disability,
+	"AuraComponents__flexible_attendance__c": item.flexible_attendance,
+	"AuraComponents__StudentVisaProxy__c": item.StudentVisaProxy,
+	"AuraComponents__CurrentConsecutiveMissedPointsOfContact__c": item.CurrentConsecutiveMissedPointsOfContact,
+	"AuraComponents__PercentAttendanceLast4Weeks__c": item.PercentAttendanceLast4Weeks,
+	"AuraComponents__AuthorizedAbsences__c": item.AuthorizedAbsences,
+	"AuraComponents__PercentAttendanceYear__c": item.PercentAttendanceYear
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach collection="#[payload]">
+			<choice>
+				<when expression="#[vars.failedRecords == null]">
+					<set-variable variableName="failedRecords" value="#[[]]" />
+				</when>
+			</choice>
+			<error-handler>
+				<on-error-continue logException="true">
+					<ee:transform>
+						<ee:message>
+							<ee:set-payload>
+								<![CDATA[%dw 2.0
+output application/json 
+---
+{
+	"studentId": vars.studentId,
+	"error": "Error message here"
+}]]>
+							</ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<ee:transform>
+						<ee:message>
+							<ee:set-payload>
+								<![CDATA[%dw 2.0
+output application/json 
+---
+vars.failedRecords ++ payload]]>
+							</ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-continue>
+			</error-handler>
+			<salesforce:create doc:name="Create" doc:id="38005c0c-60b9-44af-a121-5f075319f1d2" config-ref="Salesforce_Config" type="Contact" />
+		</foreach>
+		<file:write config-ref="File_Config1" path="failed_records.json" outputMimeType="application/json" />
+	</flow>
+</mule>

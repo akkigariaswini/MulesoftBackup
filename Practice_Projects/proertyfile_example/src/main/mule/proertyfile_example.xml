@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ec0647bc-832d-449c-ab66-7dd567d17488" >
+		<http:listener-connection host="0.0.0.0" port="${port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="a588fe24-4e77-4c8d-97cd-4cc0da0ca6f4" file="${env}.properties" />
+	<flow name="proertyfile_exampleFlow" doc:id="57cf71ca-ec01-4c95-9633-8bb9fa3853b9" >
+		<http:listener doc:name="Listener" doc:id="750a9cc3-821e-4a2c-b5e0-bce8a0f51c2b" config-ref="HTTP_Listener_config" path="${path}"/>
+		<set-payload value="This is used  to test property file using javaa" doc:name="Set Payload" doc:id="3e27c405-ec78-47fa-aab1-0f8913b3a12a" />
+	</flow>
+	<flow name="proertyfile_exampleFlow1" doc:id="2658646f-122c-4563-93eb-1685e726ab2c" >
+		<http:listener doc:name="Listener" doc:id="04ed2b7b-003d-4c28-bc78-4b09e9e5403c" config-ref="HTTP_Listener_config"/>
+		<set-payload value="This is used  to test property file using yamll" doc:name="Set Payload" doc:id="1ed41660-a738-4bde-b52f-4c738e35a33e" />
+	</flow>
+</mule>

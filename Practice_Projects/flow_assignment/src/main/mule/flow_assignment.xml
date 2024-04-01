@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="81319039-704e-4a8f-97e7-1cf900650c9e" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="flow_assignmentFlow" doc:id="9dcbe6d4-ae41-4070-8b8e-c06805f9fa5d" >
+		<http:listener doc:name="Listener" doc:id="9b78dd56-25ac-4a3b-8a3f-5506b7621bb2" config-ref="HTTP_Listener_config" path="/demo"/>
+		<logger level="INFO" doc:name="Logger" doc:id="4b03d48a-b7dc-4a69-9838-589100f62b9f" message="Flow has baeen started"/>
+		<set-variable value="Test" doc:name="Platform" doc:id="c14911d9-18b1-4b82-b0dd-2515eade4e7f" variableName="Platform"/>
+		<flow-ref doc:name="Flow Reference" doc:id="d9023f86-16c6-47ec-9828-64c044569034" name="flow_assignmentFlow1"/>
+	</flow>
+	<flow name="flow_assignmentFlow1" doc:id="96b066b1-68ec-4a91-b066-cbbe48638048" >
+		<choice doc:name="Choice" doc:id="545ea797-7c00-47de-9058-a295b36c9503">
+			<when expression='#[vars.Platform =="Test"]'>
+				<logger level="INFO" doc:name="Logger" doc:id="fd075d07-8d9e-4b57-a9e4-af6797277e41" message="This is Test Logger" />
+			</when>
+			<when expression='#[vars.Platform == "Test one"]'>
+				<logger level="INFO" doc:name="Logger" doc:id="00522ae4-4945-43e7-964d-211a3e9456b1" message="This is Test one logger" />
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="4932e6ae-7692-46dc-9255-9a08094354a1" message="This is default logger" />
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="4bf379fb-1c6f-4567-8ea2-6b86544154ad">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Process" :"completed"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

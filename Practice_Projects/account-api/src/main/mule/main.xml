@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="1aa054eb-3d8b-4db2-8634-1bbcea7f409e" >
+		<salesforce:basic-connection username="akkigariaswini33@gmail.com" password="Aswini@2001" securityToken="Wxsl56GLiPn2pseAX992eT01" url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<flow name="getAccounts" doc:id="17012833-b6e4-4fbe-9221-c04fbb450e0c" >
+		<http:listener doc:name="GET/accounts" doc:id="d6e54600-47e7-4c01-86e3-ac303941de7c" config-ref="accountsapi-httpListenerConfig" path="/accounts" allowedMethods="GET"/>
+		<set-variable value="#[attributes.queryParams.'type' default &quot;personal&quot;]" doc:name="accountType" doc:id="e68384e4-41bf-4210-9e14-ad03d732c7f5" variableName="accountType"/>
+		<logger level="INFO" doc:name="Logger" doc:id="097cc1d6-d41e-4486-a12b-9800631b0815" message="#[vars.accountType]"/>
+		<salesforce:query doc:name="Query" doc:id="a57bb83b-04de-45f4-814c-57c38f5d9123" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query><![CDATA[select ID,Name,Type from Account where accountType=:val]]></salesforce:salesforce-query>
+			<salesforce:parameters><![CDATA[#[output application/java
+---
+{
+	val:vars.accountType
+}]]]></salesforce:parameters>
+		</salesforce:query>
+	</flow>
+</mule>

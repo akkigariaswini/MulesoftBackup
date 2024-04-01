@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="296493c0-cc72-4d48-b846-181990898318" >
+		<vm:queues >
+			<vm:queue queueName="vm1" queueType="PERSISTENT" />
+		</vm:queues>
+	</vm:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c5be0adf-ce09-4837-8582-6c905d46a06f" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="vm_connector_exampleFlow" doc:id="a7240f18-4387-4a73-993c-7e8fe5c6e4a9" >
+		<http:listener doc:name="Listener" doc:id="3be60774-b516-4dfe-af4c-2df40df45705" config-ref="HTTP_Listener_config" path="/vmConnector"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2c5cecfa-a400-4564-8ae9-68ad17a4eec3" message="Before publishing message"/>
+		<vm:publish-consume doc:name="Publish consume" doc:id="ce525c77-2a95-4313-8bb4-28d50776a24d" config-ref="VM_Config" queueName="vm1"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e61ee76c-47e9-48c3-81a9-56defa9338a9" message="After publishing message"/>
+	</flow>
+	<flow name="vm_connector_exampleFlow1" doc:id="ae5cac71-a086-472c-8ae2-81b9251edc09" >
+		<vm:listener queueName="vm1" doc:name="vmListner" doc:id="e76a6440-759f-40c9-ac0f-f8adcafb9caf" config-ref="VM_Config"/>
+		<logger level="INFO" doc:name="Logger" doc:id="026f2d63-70e9-4dab-896d-00511a9bdde6" message="#[payload]"/>
+	</flow>
+</mule>

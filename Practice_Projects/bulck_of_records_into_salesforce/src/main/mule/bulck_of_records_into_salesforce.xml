@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="0ffe6a8d-0772-45fb-a58c-e35da7f18b9d" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="3a204988-6543-41a0-a701-ed22563679bb" >
+		<salesforce:basic-connection username="akkigariaswini33@gmail.com" password="Aswini@2001" securityToken="Wxsl56GLiPn2pseAX992eT01" url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<flow name="bulck_of_records_into_salesforceFlow" doc:id="9609cd6e-0357-4fd5-8370-f808c9125d01" >
+		<http:listener doc:name="Listener" doc:id="bb8bd128-a911-4169-8307-62ae949b2c27" path="/test" config-ref="HTTP_Listener_config"/>
+		<ee:transform doc:name="Transform Message" doc:id="a9969b8c-4622-4a0b-a80e-6af16004ae21" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="allRecords" ><![CDATA[%dw 2.0
+output application/json 
+---
+payload map (item,index) ->
+{
+	"AuraComponents__studentId__c" : item.studentId,
+	"LastName" :item.lastName,
+	"AuraComponents__disability__c":item.disability,
+	"AuraComponents__flexible_attendance__c":item.flexible_attendance,
+	"AuraComponents__StudentVisaProxy__c":item.StudentVisaProxy,
+	"AuraComponents__CurrentConsecutiveMissedPointsOfContact__c":item.CurrentConsecutiveMissedPointsOfContact,
+	"AuraComponents__PercentAttendanceLast4Weeks__c":item.PercentAttendanceLast4Weeks,
+	"AuraComponents__AuthorizedAbsences__c":item.AuthorizedAbsences,
+	"AuraComponents__PercentAttendanceYear__c":item.PercentAttendanceYear
+	
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		 <foreach collection="#[dw('vars.Allrecords') groupBy ((item, index) -> (index / 200) as :string)]" doc:name="For Each Batch">
+        <ee:transform doc:name="Transform Batch">
+            <ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+                output application/json 
+                ---
+                $.values[$$ as Number]  // Select each batch of up to 200 records
+            ]]</ee:set-payload>
+        </ee:transform>
+        <salesforce:upsert doc:name="Upsert" doc:id="1b86fc70-06a4-4749-aa99-55aa863c78d0" config-ref="Salesforce_Config" externalIdFieldName="AuraComponents__studentId__c" objectType="Contact">
+            <salesforce:records ><![CDATA[#[payload]]]></salesforce:records>
+        </salesforce:upsert>
+        <ee:transform doc:name="Transform Message" doc:id="b48de4b8-a315-4e62-a441-1798eaecab44" >
+            <!-- Your existing error handling logic for the batch -->
+        </ee:transform>
+    </foreach>
+    <ee:transform doc:name="Transform Message" doc:id="f6d92046-5d77-4ad3-98ea-f6e46c051149">
+        <!-- Your final transformation logic for the response -->
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+    
+</ee:transform>
+	</flow>
+</mule>

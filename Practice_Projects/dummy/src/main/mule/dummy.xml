@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d3b60fc5-0859-454b-a269-8e9d781280ec" >
+		<http:listener-connection host="0.0.0.0" port="8087" />
+	</http:listener-config>
+	<ftp:config name="FTP_Config" doc:name="FTP Config" doc:id="594f447c-ec63-44fb-b8f1-1d3adc896b24" >
+		<ftp:connection host="localhost" username="Test-User" password="Test-User" />
+	</ftp:config>
+	<flow name="dummyFlow" doc:id="fb748ee9-3409-476b-8c8b-f0dbaa09e292" >
+		<http:listener doc:name="Listener" doc:id="a68a7a37-2035-472e-8458-6420ecdf9471" config-ref="HTTP_Listener_config" path="/FTP"/>
+		<ftp:read doc:name="Read" doc:id="5397ea3d-4f5c-4fac-a93c-8538fd31f5e7" config-ref="FTP_Config" path="Assignment.csv"/>
+		<ee:transform doc:name="Transform Message" doc:id="708c0e4b-cec3-4405-8d19-b6e31ed0a7c3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="2be39bad-222c-4ae5-b651-9b677a39d588" message="payload"/>
+		<ftp:write doc:name="Write" doc:id="fe622d5e-8fa9-45f2-b1fa-e4bc645af1f7" config-ref="FTP_Config" path="Assignmentcsv.csv"/>
+	</flow>
+</mule>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ad269076-ed33-452a-bf8b-78bb34542866" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="50b7f798-6118-4525-bd4f-76bedd170a9e" >
+		<salesforce:basic-connection username="akkigariaswini33@gmail.com" password="Aswini@2001" securityToken="Wxsl56GLiPn2pseAX992eT01" url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="0782e7d1-b0d1-43cf-a92b-6f3a2d4fc24d" >
+		<email:smtp-connection host="smtp.gmail.com" user="akkigariaswini33@gmail.com" password="fizvzokrcuollghv">
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<flow name="parsetemplateFlow" doc:id="0690505e-f3ac-4de7-a7a5-528e6b33e79f" >
+		<http:listener doc:name="Listener" doc:id="e15f0fde-d537-4e63-9c65-4ef9877cc9c5" config-ref="HTTP_Listener_config" path="/parse"/>
+		<salesforce:query doc:name="Query" doc:id="e50b0d11-d2c5-47bf-acfa-36995080716b" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT Id,FirstName, LastName, Email from Contact limit 10]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<logger level="INFO" doc:name="Logger1" doc:id="4e7823c3-ba7c-4c72-83f0-306f6fa72fb3" message="#[%dw 2.0&#10;output application/json &#10;---&#10;payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="b394ac7b-03c6-4ba6-be7b-b3eb82260494" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<parse-template doc:name="Parse Template" doc:id="8f59b91c-2877-4c63-8719-ba12b484155e" >
+			<content >&lt;html&gt;
+    &lt;P&gt; Hi User&lt;/P&gt;
+    &lt;p&gt; Hope this email finds you well.We are pleased to share records from contacts.&lt;/p&gt;
+	&lt;body&gt;
+		&lt;table border=2&gt;
+			&lt;thead&gt;
+				&lt;tr&gt;
+					&lt;th&gt;FirstName&lt;/th&gt;
+					&lt;th&gt;LastName&lt;/th&gt;
+					&lt;th&gt;Email&lt;/th&gt;
+				&lt;/tr&gt;
+			&lt;/thead&gt;
+			&lt;tbody&gt;
+#[%dw 2.0
+output text/plain
+---
+payload map ((item) -&gt;
+	&quot;&lt;tr&gt;&lt;td&gt;&lt;span&gt;&quot; ++ (item.FirstName default &quot;&quot;) ++ &quot;&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;span&gt;&quot;
+	++ (item.LastName default &quot;&quot;) ++ &quot;&lt;/span&gt;&lt;/td&gt;&lt;td&gt;&lt;span&gt;&quot;
+	++ (item.Email default &quot;&quot;) ++ &quot;&lt;/span&gt;&lt;/td&gt;&quot;)
+	joinBy &quot;&quot;]
+			&lt;/tbody&gt;
+		&lt;/table&gt;
+	&lt;/body&gt;
+	&lt;p&gt;Thank you for your attention.&lt;/p&gt;
+	&lt;p&gt;Best Regards&lt;/p&gt;
+	&lt;p&gt;Akkigari Aswini&lt;/p&gt;
+&lt;/html&gt;</content>
+		</parse-template>
+		<email:send doc:name="Send" doc:id="3802c122-1971-41b9-a988-659341a62fab" config-ref="Email_SMTP" fromAddress="akkigariaswini33@gmail.com" subject="Records From Contacts">
+			<email:to-addresses >
+				<email:to-address value="aswini.a@ibirdsservices.com" />
+				<email:to-address value="gowrid64@gmail.com" />
+			</email:to-addresses>
+			<email:body contentType="text/html" >
+			</email:body>
+		</email:send>
+	
+</flow>
+</mule>

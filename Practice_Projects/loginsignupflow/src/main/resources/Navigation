@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Menu</title>
+    <style>
+        /* Some basic styling for the navigation menu */
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            background-color: #f1f1f1;
+            overflow: hidden;
+        }
+
+        li {
+            float: left;
+        }
+
+        li a {
+            display: block;
+            color: #333;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        li a:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<ul>
+    <li><a href="#pizza">Pizza</a></li>
+    <li><a href="#burger">Burger</a></li>
+    <li><a href="#sushi">Sushi</a></li>
+    <li><a href="#pasta">Pasta</a></li>
+    <!-- Add more items as needed -->
+</ul>
+
+<!-- Example content sections for each food item -->
+<div id="pizza">
+    <h2>Pizza</h2>
+    <p>Description of pizza...</p>
+</div>
+
+<div id="burger">
+    <h2>Burger</h2>
+    <p>Description of burger...</p>
+</div>
+
+<div id="sushi">
+    <h2>Sushi</h2>
+    <p>Description of sushi...</p>
+</div>
+
+<div id="pasta">
+    <h2>Pasta</h2>
+    <p>Description of pasta...</p>
+</div>
+
+<!-- Add more content sections as needed -->
+
+</body>
+</html>

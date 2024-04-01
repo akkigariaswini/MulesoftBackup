@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="04f80e07-5cf5-4888-bb62-761c8441d2b8" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="ef1b1aa5-a432-45a4-8784-12f091e218e1" >
+		<salesforce:basic-connection username="akkigariaswini33@gmail.com" password="Aswini@2001" securityToken="Wxsl56GLiPn2pseAX992eT01" url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<flow name="dymanicflow_exampleFlow" doc:id="5375952d-d63f-40c9-a5dd-f1bdd30ad8a5" >
+		<http:listener doc:name="Listener" doc:id="00914d6d-236c-4d6c-8d91-afc68cd59476" config-ref="HTTP_Listener_config" path="/dymaicflow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="a79804ed-6e98-467f-af6d-96f6dbc3651d" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="abea579d-a60a-4abf-92e0-74b79591db9e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map(item,index) ->
+{
+	"Name":item.Name,
+	"Phone":item.Phone,
+	
+}
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="Account" ><![CDATA[%dw 2.0
+output application/json
+---
+payload map(item,index) ->
+{
+	"Name":item.Name,
+	"Phone":item.Phone,
+	
+}
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<salesforce:create type="Account" doc:name="Create" doc:id="c61369f9-ec8b-4891-bccc-557d513bc38b" config-ref="Salesforce_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="e123bffd-d41c-419f-90f9-4ae12a348371" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="AccountId" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"AccountId" : payload.items.id[0]
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="5b9f865c-86da-4e26-a575-b80c3f97e54a" message="#[vars.AccountId]"/>
+		<flow-ref doc:name="Flow Reference" doc:id="e6b28b10-a155-415c-93b2-e525b79daf85" name="dymanicflow_exampleSub_Flow" />
+	</flow>
+	<sub-flow name="dymanicflow_exampleSub_Flow" doc:id="a0aceb6a-5087-4b94-bf8f-2459e31a0d36" >
+		<logger level="INFO" doc:name="Logger" doc:id="db9f1bbe-4d50-4107-8f8a-06e3db2f9636" message='#[{&#10; "Name" : vars.Account[0].Name,&#10; "AccountId" : vars.AccountId[0]&#10; }]'/>
+		<ee:transform doc:name="Transform Message" doc:id="ae40318b-17c9-44d3-a850-b6f31ea85744" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[{
+	"LastName" :vars.Account[0].Name,
+	"AccountId" :vars.AccountId[0]
+	
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create doc:name="Create" doc:id="216c8ad0-3439-49da-82ad-f6282aaacfd7" config-ref="Salesforce_Config" type="Contact"/>
+		<logger level="INFO" doc:name="Logger" doc:id="df378b3d-dacb-49b9-a8e8-2a2631d3f67e" message="Final logger"/>
+	</sub-flow>
+</mule>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="bcd3980a-8468-4b6d-9903-c8661667b14d" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="2262bd4f-980a-4284-9e9f-e4097ced19b1" >
+		<salesforce:basic-connection username="akkigariaswini33@gmail.com" password="Aswini@2001" securityToken="Wxsl56GLiPn2pseAX992eT01" url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<flow name="bluck_of_salesforce_recordsFlow" doc:id="d422171a-561f-4617-bd49-b58a159dd2c6" >
+		<http:listener doc:name="Listener" doc:id="4e48d14e-4b64-4e3a-ae2c-e60d9b5c1df8" config-ref="HTTP_Listener_config" path="/test"/>
+		<logger level="INFO" doc:name="Logger" doc:id="c2944be7-10aa-4e6e-be3b-f19395daf8ae" message="#[payload]"/>
+		<foreach doc:name="For Each" doc:id="a4aba91e-6d51-41aa-bb52-d8d33515f60f" collection="#[payload]">
+			<ee:transform doc:name="Transform Message" doc:id="56449307-5360-4edc-98bd-f496554a2db4">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="allRecords"><![CDATA[%dw 2.0
+output application/json 
+---
+payload map (item,index) ->
+{
+	"AuraComponents__studentId__c" : item.studentId,
+	"LastName" :item.lastName,
+	"AuraComponents__disability__c":item.disability,
+	"AuraComponents__flexible_attendance__c":item.flexible_attendance,
+	"AuraComponents__StudentVisaProxy__c":item.StudentVisaProxy,
+	"AuraComponents__CurrentConsecutiveMissedPointsOfContact__c":item.CurrentConsecutiveMissedPointsOfContact,
+	"AuraComponents__PercentAttendanceLast4Weeks__c":item.PercentAttendanceLast4Weeks,
+	"AuraComponents__AuthorizedAbsences__c":item.AuthorizedAbsences,
+	"AuraComponents__PercentAttendanceYear__c":item.PercentAttendanceYear
+	
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="12ad32c4-b032-4f92-bdf3-73c8455b71cb" message='#[%dw 2.0&#10;output application/json&#10;---&#10;"Batches -----&gt;": vars.counter]' />
+			<salesforce:upsert doc:name="Upsert" doc:id="43a32d6d-a77c-4e94-be0e-85732c092820" config-ref="Salesforce_Config" objectType="Contact" externalIdFieldName="AuraComponents__studentId__c">
+				<salesforce:records ><![CDATA[#[vars.allRecords]]]></salesforce:records>
+			</salesforce:upsert>
+			<logger level="INFO" doc:name="Logger" doc:id="d866ed60-157d-4bed-a302-71cd3863e55a" message='#[%dw 2.0&#10;output application/json&#10;---&#10;"before set variable--&gt;"  : payload.items.payload]'/>
+			<set-variable value="#[if (vars.errors != null) (vars.errors default []) ++ (payload.items.exception.message filter ($ != null)) &#10;else payload.items.exception.message filter ($ != null)]" doc:name="Set Variable" doc:id="e3204eb0-000e-4f29-81e3-b69a986e7f3b" variableName="errors"/>
+			<logger level="INFO" doc:name="Logger" doc:id="d6aaef59-c71e-4bfd-8a62-256d5ae15656" message='#[%dw 2.0&#10;output application/json&#10;---&#10;"set variable--&gt;"  : payload]'/>
+			<ee:transform doc:name="Transform Message" doc:id="e9585ca5-fe5b-4b37-94d4-476c7daa3ff8" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json skipNullOn="everywhere"
+---
+payload.items.payload map(item,index) -> 
+if(item.success == false)({ 
+	"AuraComponents__studentId__c" : vars.allRecords[index].AuraComponents__studentId__c,
+	"LastName" :vars.allRecords[index].LastName,
+	"AuraComponents__error__c" :item.errors.message
+})else(null)]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<salesforce:upsert objectType="Contact" externalIdFieldName="AuraComponents__studentId__c" doc:name="Upsert" doc:id="df12cc34-ad42-47ec-8f1e-a2ae0538e0a6" config-ref="Salesforce_Config"/>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="40f71fa0-0986-4d87-9d17-2b08e5c44aec" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+	vars.errors
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="bf20a85e-e961-4224-8fc3-94bc3171d3e1" message='#[%dw 2.0&#10;output application/json&#10;---&#10;"final--&gt;"  : vars.errors]'/>
+	</flow>
+</mule>

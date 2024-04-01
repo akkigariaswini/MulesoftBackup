@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="Test" format="xml">
+      <types:example format="xml" element="PurchaseOrder" location="examples/MuleSoftPractice.xml"/>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#4587ba32-ce62-4962-995c-4506acb3c5b7">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Test"/>
+          <types:attributes type="Test"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

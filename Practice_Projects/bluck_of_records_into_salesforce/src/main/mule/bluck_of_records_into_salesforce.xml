@@ -1,0 +1,70 @@
+
+
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="68c5f76b-d8a5-4a32-ba9e-71032e01f984" >
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="054b48a7-3cda-41a9-8e18-ad2ff7a95a42" >
+		<salesforce:basic-connection username="akkigariaswini33@gmail.com" password="Aswini@2001" securityToken="Wxsl56GLiPn2pseAX992eT01" url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<flow name="upsert_records_without_apiFlow" doc:id="4d19ab7a-e8b0-4903-90de-10f924b4d7fc" >
+		<http:listener doc:name="Listener" doc:id="d1f8709a-2447-4c5a-a34c-eda4d1b38c3d" config-ref="HTTP_Listener_config" path="/upsertRecords"/>
+		<ee:transform doc:name="Transform Message" doc:id="1e76e82d-3e4f-43e5-b849-aeed2aa27517" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="Allrecords" ><![CDATA[%dw 2.0
+output application/json 
+---
+payload map (item,index) ->
+{
+	"AuraComponents__studentId__c" : item.studentId,
+	"LastName" :item.lastName,
+	"AuraComponents__disability__c":item.disability,
+	"AuraComponents__flexible_attendance__c":item.flexible_attendance,
+	"AuraComponents__StudentVisaProxy__c":item.StudentVisaProxy,
+	"AuraComponents__CurrentConsecutiveMissedPointsOfContact__c":item.CurrentConsecutiveMissedPointsOfContact,
+	"AuraComponents__PercentAttendanceLast4Weeks__c":item.PercentAttendanceLast4Weeks,
+	"AuraComponents__AuthorizedAbsences__c":item.AuthorizedAbsences,
+	"AuraComponents__PercentAttendanceYear__c":item.PercentAttendanceYear
+	
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<salesforce:upsert doc:name="Upsert" doc:id="004cd782-82e9-4d0e-be51-12fcb02feaa9" config-ref="Salesforce_Config" externalIdFieldName="AuraComponents__studentId__c" objectType="Contact">
+			<salesforce:records ><![CDATA[#[vars.Allrecords]]]></salesforce:records>
+		</salesforce:upsert>
+		<ee:transform doc:name="Transform Message" doc:id="f5c98fe6-1049-4240-a422-5c9d56f2ffe9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json skipNullOn="everywhere"
+---
+payload.items.payload map(item,index) -> 
+if(item.success == false)({ 
+	"AuraComponents__studentId__c" : vars.Allrecords[index].AuraComponents__studentId__c,
+	"LastName" :vars.Allrecords[index].LastName,
+	"AuraComponents__error__c" :item.errors.message
+})else(null)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:upsert doc:name="Upsert" doc:id="d858c435-a792-473a-b7e6-1997500ba8ed" externalIdFieldName="AuraComponents__studentId__c" config-ref="Salesforce_Config" objectType="Contact">
+		</salesforce:upsert>
+		<ee:transform doc:name="Transform Message" doc:id="adba1a41-6751-46d4-9964-25e647b4a79c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

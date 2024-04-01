@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="2b4e5703-babf-4c58-869c-3667abc8bce6" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="2b05a93d-18e9-4be3-b64d-29a5e88239a2" >
+		<salesforce:basic-connection username="akkigariaswini33@gmail.com" password="Aswini@2502" securityToken="e7nQC90agw31h1szuOUszVsw" url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<cloudhub:config name="CloudHub_Config" doc:name="CloudHub Config" doc:id="f2b709bf-a688-4d75-86bb-604ee0e543d7" >
+		<cloudhub:connection username="aswiniakkigari" password="Aswini@1234" environment="Sandbox" />
+	</cloudhub:config>
+	<flow name="NavigationBar" doc:id="83b4693f-1bc5-4a38-b4b5-0832e4d21b9b" >
+		<http:listener doc:name="Listener" doc:id="313e5f94-d142-4e8b-8846-803a61e46790" config-ref="HTTP_Listener_config" path="/loginSignUP"/>
+		<parse-template doc:name="Parse Template" doc:id="dcf0e994-39e7-4e5d-abc7-3d71f4ef7f74" location="navigation.html"/>
+	</flow>
+	<flow name="loginsignupflowFlow1" doc:id="6f4c12c8-b795-48bc-881b-82e97e471be9" >
+		<http:listener doc:name="Listener" doc:id="0282c9e5-3185-4405-9cfc-2cbf118a1262" config-ref="HTTP_Listener_config" path="/loginn"/>
+		<parse-template doc:name="Parse Template" doc:id="ee26ba14-3f33-4668-bd51-814a093c12f2" location="login.html"/>
+	</flow>
+	<flow name="forgotPassword" doc:id="fa346626-5215-4159-91a6-ded0aaa98555" >
+		<http:listener doc:name="Listener" doc:id="4087a239-af89-4ae5-8c31-21da0c010f8b" config-ref="HTTP_Listener_config" path="/forgotPassword"/>
+		<parse-template doc:name="Parse Template" doc:id="994fee91-378a-4940-8997-4346cf7795bd" location="forgetpassword.html"/>
+	</flow>
+	<flow name="loginsignupflowFlow2" doc:id="75e743f4-c3d2-43fa-94f3-ca4b32e2d562" >
+		<http:listener doc:name="Listener" doc:id="538ecaae-625c-44a1-8235-7cccd876f578" config-ref="HTTP_Listener_config" path="/forgotPasswords"/>
+		<ee:transform doc:name="Transform Message" doc:id="ada21341-2993-4676-a80f-1d1a306f2085" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="signUpFlow" doc:id="26c33b8c-c680-4ed6-bb7a-8aeebf7ca686" >
+		<http:listener doc:name="Listener" doc:id="30209fb2-250f-4759-ad66-07d06e82e992" config-ref="HTTP_Listener_config" path="/signupPage"/>
+		<parse-template doc:name="Parse Template" doc:id="8dd373da-a9f0-4c75-acad-88a17e61ea68" location="signup.html"/>
+	
+</flow>
+	<flow name="LoginFlow" doc:id="68e2ae10-3e2e-44ed-b7e0-85daccc8a23b" >
+		<http:listener doc:name="Listener" doc:id="ed8b8b28-35a9-4b65-bafa-9a6ce06ed9de" config-ref="HTTP_Listener_config" path="/login"/>
+		<ee:transform doc:name="Transform Message" doc:id="ca79bd47-6c09-4ddf-ac95-262b3d02819f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="bd9baa9f-c8f8-4c60-a9b9-02cf1ab95b17" message="#[payload]"/>
+		<salesforce:query doc:name="Query" doc:id="9fa811c4-560a-4577-bcc9-af7f97626317" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[Select Id,Name,Username,Contact.AuraComponents__Password__c from User where Username=':username' AND Contact.AuraComponents__Password__c = ':password']]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	"username" : payload.username,
+	"password" : payload.password
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="7c2d71fb-bdb3-4294-9cb7-5c3e20c9b02d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="25f192ef-2be8-4d36-8d6c-3d882f4f7e72" message="#[payload]"/>
+		<choice doc:name="Choice" doc:id="476ce038-d2fd-4609-b861-2d03a5f37361" >
+			<when expression="#[sizeOf(payload)&gt;=1]">
+				<ee:transform doc:name="Transform Message" doc:id="6392d690-a428-46de-abb9-ad28fc9b52ae" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<parse-template doc:name="Parse Template" doc:id="fff84292-8960-4775-996d-26307087a458" location="foodItems.html"/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="938f4090-d466-4859-b3a9-fab3364735bf" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+ "Message" : "Please enter valid credentails"
+}
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	
+</flow>
+	<flow name="signupFLow" doc:id="3f49b2c1-0423-4244-967c-4f8cbbaa54ba" >
+		<http:listener doc:name="Listener" doc:id="f916b5df-483e-47d3-ad66-1061c75c45ea" config-ref="HTTP_Listener_config" path="/signup"/>
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="1a37421d-2955-41c5-8738-e6578af79a24" variableName="ContactDetails"/>
+		<logger level="INFO" doc:name="Logger" doc:id="55918c4d-653a-4715-bcac-29b2a9c87737" message="#[payload]"/>
+		<salesforce:query doc:name="Query" doc:id="c699188b-5348-423e-861e-e3464e6f86b5" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT id,LastName, FirstName,Email from Contact where Email = ':email']]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	"email" : vars.ContactDetails.email
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<choice doc:name="Choice" doc:id="4d2ff898-74d7-41c4-9c8e-d7f3a670237d" >
+			<when expression="#[sizeOf(payload)&gt;=1]">
+				<ee:transform doc:name="Transform Message" doc:id="df71f917-3945-4ed8-ac4c-2e2c5a1cc56c" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "An account with this email already exists. Please choose another email."
+}
+  ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="16de5213-b989-4bf8-8bc7-9444ec522f42">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[{	
+	
+    "Name": vars.ContactDetails.lastName,
+	
+	}
+]
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<salesforce:create doc:name="Create" doc:id="8c49065b-0627-460a-9fbf-bebe654b4e56" config-ref="Salesforce_Config" type="Account"/>
+				<logger level="INFO" doc:name="Logger" doc:id="b648c6fb-8fe0-41b4-854a-ee8f0759e00e" message="#[payload]"/>
+				<ee:transform doc:name="Transform Message" doc:id="2f39f0d6-8302-4f2e-8b70-620df96da3b3">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[{
+	"FirstName": vars.ContactDetails.firstName,
+	"LastName": vars.ContactDetails.lastName,
+	"Email":vars.ContactDetails.email,
+	"AuraComponents__Password__c": vars.ContactDetails.password,
+	"AccountId": payload.items[0].payload.id
+	
+}]]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="50c8cb1b-9040-4415-b412-f935fd343942" message="#[payload]"/>
+				<salesforce:create type="Contact" doc:name="Create" doc:id="80e14fc3-fd82-4378-8e4c-c72886963f5d" config-ref="Salesforce_Config" />
+				<ee:transform doc:name="Transform Message" doc:id="8d5f788d-1d7c-4dd0-a325-1f726d35432e">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="80a7d87d-80a6-4b9f-b598-150529d49105" message="#[payload]"/>
+<ee:transform doc:name="Transform Message" doc:id="dca10761-5c49-4117-a3fa-97435576f918">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[{
+	"FirstName":vars.ContactDetails.firstName,
+	"LastName":vars.ContactDetails.lastName,
+	"Alias":vars.ContactDetails.firstName,
+	"Email":vars.ContactDetails.email,
+	"Username": vars.ContactDetails.username,
+	"CommunityNickname": vars.ContactDetails.lastName,
+	"ProfileId": '00e5i000000j2XwAAI',
+	IsActive: true,
+	"ContactId":payload.items[0].payload.id,
+	"TimeZoneSidKey": 'GMT', 
+    "LocaleSidKey": 'en_US', 
+    "EmailEncodingKey": 'UTF-8', 
+    "LanguageLocaleKey": 'en_US'
+
+	
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<salesforce:create doc:name="Create" doc:id="48bed308-1b6e-40d2-bfe8-340d3c1b5caf" config-ref="Salesforce_Config" type="User"/>
+				<ee:transform doc:name="Transform Message" doc:id="9f241198-e149-42cb-9287-b713496f1d06" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="215793e0-0187-401e-a9a4-e3623bf3329f" message="#[payload]"/>
+			
+</otherwise>
+		</choice>
+
+	</flow>
+<!-- [STUDIO:"signupFLow"]	<flow name="signupFLow" doc:id="1bafa784-3683-41e5-992b-9580fcdca0a7">
+		<http:listener doc:name="Listener" doc:id="b6f38afa-85f1-4d39-97b2-ae7c3d4310a0" config-ref="HTTP_Listener_config" path="/signup" />
+		<set-variable value="#[payload&#93;" doc:name="Set Variable" doc:id="efb13129-895d-4982-9101-7bb3d69403e0" variableName="contactData" />
+		<logger level="INFO" doc:name="Logger" doc:id="35880817-0ea2-40b5-9fa0-251081d3aa7d" message="#[vars.contactData&#93;" />
+		<ee:transform doc:name="Transform Message" doc:id="401dca2a-f6c1-4980-9710-c8e6619d7290">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+&#45;&#45;-
+[
+	{"Name":vars.contactData.firstName}
+&#93;&#93;&#93;></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="ContactCreationData"><![CDATA[%dw 2.0
+output application/json
+&#45;&#45;-
+[{
+//	"FirstName": vars.contactData.firstName,
+//	"LastName": vars.contactData.lastName,
+//	"Email":vars.contactData.email,
+//	"Password__c": vars.contactData.password,
+//	"AccountId": payload.items.id
+	
+}&#93;&#93;&#93;></ee:set-variable>
+				<ee:set-variable variableName="userCreationData"><![CDATA[%dw 2.0
+output application/json
+&#45;&#45;-
+[{
+//	"FirstName":vars.ContactCreationData.FirstName,
+//	"LastName":vars.ContactCreationData.LastName,
+//	"Alias":vars.ContactCreationData.FirstName,
+//	"Email":vars.ContactCreationData.Email,
+//	"Username": vars.ContactCreationData.Email,
+//	"CommunityNickname": vars.ContactCreationData.LastName,
+//	"ProfileId": '00e5g000000oYjLAAU',
+//	IsActive: true,
+//	"ContactId":payload.items.id,
+//	"TimeZoneSidKey": 'GMT', 
+//    "LocaleSidKey": 'en_US', 
+//    "EmailEncodingKey": 'UTF-8', 
+//    "LanguageLocaleKey": 'en_US'
+
+	
+}&#93;&#93;&#93;></ee:set-variable>
+				<ee:set-variable variableName="AccountCreationData"><![CDATA[%dw 2.0
+output application/json
+&#45;&#45;-
+[
+	{
+//		"Name":vars.contactData.firstName
+	}
+&#93;&#93;&#93;></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="24aee11f-a421-4be4-9ff3-b070058bd07e" message="#[vars.AccountCreationData&#93;" />
+		<salesforce:create type="Account" doc:name="Account Creation" doc:id="be3cd37b-130c-4911-a3c8-b2be8b901f5c" config-ref="Salesforce_Config">
+		</salesforce:create>
+		<ee:transform doc:name="Transform Message" doc:id="4c956daa-7e20-46d0-98a6-286d5bb6e094">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+&#45;&#45;-
+[{
+	"FirstName": vars.contactData.firstName,
+	"LastName": vars.contactData.lastName,
+	"Email":vars.contactData.email,
+	"AuraComponents__Password__c": vars.contactData.password,
+	"AccountId": payload.items.id
+	
+}&#93;&#93;&#93;></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create doc:name="Create" doc:id="f006fc08-70ad-4c35-a173-aa5d6407aa2f" config-ref="Salesforce_Config" type="Contact">
+		</salesforce:create>
+		<ee:transform doc:name="Transform Message" doc:id="e8f4f970-5030-4fe4-a0bb-4b87171c5f0e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+&#45;&#45;-
+[{
+	"FirstName":vars.contactData.firstName,
+	"LastName":vars.contactData.lastName,
+	"Alias":vars.contactData.firstName,
+	"Email":vars.contactData.email,
+	"Username": vars.contactData.username,
+	"CommunityNickname": vars.contactData.lastName,
+	"ProfileId": '00e5i000000j2XwAAI',
+	IsActive: true,
+	"ContactId":payload.items.id,
+	"TimeZoneSidKey": 'GMT', 
+    "LocaleSidKey": 'en_US', 
+    "EmailEncodingKey": 'UTF-8', 
+    "LanguageLocaleKey": 'en_US'
+
+	
+}&#93;&#93;&#93;></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create type="User" doc:name="User Creation" doc:id="af2ec3f3-a819-47b6-b63b-32c7fe27eaa9" config-ref="Salesforce_Config" />
+		<ee:transform doc:name="Transform Message" doc:id="a15d0037-7b8a-4c20-9dad-14de2ed7db34">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+&#45;&#45;-
+payload&#93;&#93;></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	
+</flow> [STUDIO] -->
+
+</mule>

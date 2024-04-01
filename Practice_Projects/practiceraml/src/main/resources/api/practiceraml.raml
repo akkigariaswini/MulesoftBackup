@@ -1,0 +1,22 @@
+#%RAML 1.0
+title: PracticeRAML
+/orders:
+  get:
+    headers:
+      outputType:
+        type: string
+    queryParameters:
+      orderId:
+        type: string
+      orderType :
+        type: string
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+              {
+                "id" :"2",
+                "type":"clothing",
+                "quantity" :200
+              }

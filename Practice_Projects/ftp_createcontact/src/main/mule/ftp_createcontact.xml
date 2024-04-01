@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="83f7d224-4de6-47c2-b47b-2a2a67f5f3e2" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="eb23d0d3-b396-4c60-a80f-44542edbe329" >
+		<salesforce:basic-connection username="akkigariaswini33@gmail.com" password="Aswini@2001" securityToken="Wxsl56GLiPn2pseAX992eT01" url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<ftp:config name="FTP_Config" doc:name="FTP Config" doc:id="faa86cc3-1684-4851-a898-9c0c4cde8038" >
+		<ftp:connection host="localhost" username="Test-User" password="Test-User" />
+	</ftp:config>
+	<flow name="ftp_createcontactFlow" doc:id="6975391e-0f94-4652-a90c-081625c7a74d" >
+		<salesforce:subscribe-channel-listener streamingChannel="/data/ContactChangeEvent" doc:name="Subscribe channel listener" doc:id="ea60af5b-fd00-46fa-b56b-d532547ff4e6" config-ref="Salesforce_Config"/>
+		<logger level="INFO" doc:name="Logger" doc:id="3d279204-9b7a-4198-979d-4aba662dddb1" message="#[%dw 2.0&#10;output application/json &#10;---&#10;payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="33cf8d7e-bc73-4017-b521-2374e6724779" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var recordIds = payload.data.payload.ChangeEventHeader.recordIds[0]
+var data = if (payload.data.payload != null and payload.data.payload is Object) payload.data.payload - "ChangeEventHeader" else {}
+var fields = data -- ["LastModifiedDate", "CreatedDate","CreatedById","OwnerId","LastModifiedById"]
+fun removeNestedObjects(obj) =
+  obj mapObject ((value, key) -> 
+    if (value is Object) 
+      removeNestedObjects(value)
+    else 
+      {(key): value}
+  )
+  var transformedData = removeNestedObjects(fields) ++ {"recordId":recordIds}
+---
+{   transformedData :transformedData,
+    
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="80d5b676-8f48-4d66-8a06-cc51b640ba76" message="#[%dw 2.0&#10;output application/json &#10;---&#10;payload]"/>
+		<ftp:write doc:name="Write" doc:id="0d6b2cd0-39cc-4407-bcc6-fbbf11b44bc1" path="#['/'++  payload.transformedData.FirstName ++ '_' ++ payload.transformedData.LastName ++ '.csv']" config-ref="FTP_Config">
+			<ftp:content ><![CDATA[#[%dw 2.0
+output application/csv header = true
+---
+payload.transformedData]]]></ftp:content>
+		</ftp:write>
+		<logger level="INFO" doc:name="Logger" doc:id="a9f78526-4a0b-487a-8a57-f72b1f7de669" message='#[%dw 2.0&#10;output application/json &#10;---&#10;"lastPayload " :payload]'/>
+	</flow>
+</mule>

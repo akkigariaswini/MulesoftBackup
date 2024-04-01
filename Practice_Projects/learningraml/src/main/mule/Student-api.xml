@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<flow name="Student-apiFlow" doc:id="98672450-d05f-4f49-894f-f12b4a021244" >
+		<logger level="INFO" doc:name="Logger" doc:id="c5057c3e-6d48-4ba6-aba7-e49f0e16cdfc" />
+	</flow>
+	<flow name="Student-apiFlow1" doc:id="c9d1a7f3-4f95-4b86-880a-9c198a2fc5b3" >
+		<logger level="INFO" doc:name="Logger" doc:id="3d573bd8-47cf-411a-ab5b-c12653d4b36e" />
+	</flow>
+	<flow name="Student-apiFlow2" doc:id="3eda34fb-fe87-40a2-8137-54d8aae6744c" >
+		<logger level="INFO" doc:name="Logger" doc:id="49dfe2de-e179-48b9-89f2-f1874694c1d0" />
+	</flow>
+</mule>

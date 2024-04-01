@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="84ca7002-7a09-4b2e-a90e-d9e0993cea2c" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="a2cc0ad4-d354-4e61-a966-89b837e50871" >
+		<salesforce:basic-connection username="Saleem.b@ibirdsservices.com" password="Password#1437" securityToken="GMzyX9GgCFIgUCA8o5YFnHGWu" url="https://login.salesforce.com/services/Soap/u/56.0" />
+	</salesforce:sfdc-config>
+	<flow name="valid_error_records_3Flow" doc:id="13ca2f29-21fc-4402-98ef-bd2d6b48a9a3" >
+		<http:listener doc:name="Listener" doc:id="a258751c-2cc6-4f7b-979c-6c83299138c4" config-ref="HTTP_Listener_config" path="/processData"/>
+		<logger level="INFO" doc:name="Logger" doc:id="6fcb8517-460e-472b-9610-7a1d0c962d7c" message="#[payload]"/>
+		<ee:transform doc:name="Separate Valid and Error Records" doc:id="92fc91be-45b1-440c-b3b4-617ba5ff9b71">
+		    <ee:message>
+		        <ee:set-payload><![CDATA[%dw 2.0
+		        output application/json
+		        ---
+		        {
+		            validRecords: payload filter ((item) -> 
+		                item.PercentAttendanceYear is Number and 
+		                item.PercentAttendanceYear as String as Number == item.PercentAttendanceYear),
+		            errorRecords: payload filter ((item) -> 
+		                not (item.PercentAttendanceYear is Number and 
+		                item.PercentAttendanceYear as String as Number == item.PercentAttendanceYear))
+		        }]]></ee:set-payload>
+		    </ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="6a15048f-164a-4181-bd8c-813bb3960902" message="#[payload]"/>
+		<set-variable variableName="validRecords" value="#[payload.validRecords]" doc:name="Set Valid Records" />
+		<logger level="INFO" doc:name="Logger" doc:id="b48b2feb-cdd1-4fdc-bc71-0c1746ce1389" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10; "Valid Records --->": vars.validRecords&#10;}]'/>
+		<foreach doc:name="For Each Valid Record" doc:id="acd40088-2be8-4d6e-af15-1b4ea28ce707" collection="#[vars.validRecords]">
+		    <ee:transform doc:name="Transform Message" doc:id="76c74c2b-8579-4a26-abf9-b6cc06d1e19a" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.validRecords map ((item, index) -> {
+    "LastName": item.lastName,
+    "PercentAttendanceYear__c": item.PercentAttendanceYear
+})]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<salesforce:create doc:name="Create Valid Record" doc:id="69c09789-8a64-4bb6-90bd-21e12a7dff6f" config-ref="Salesforce_Config" type="Contact">
+		        <salesforce:records><![CDATA[#[payload]]]></salesforce:records>
+		    </salesforce:create>
+		</foreach>
+		<set-variable variableName="errorRecords" value="#[payload.errorRecords]" doc:name="Set Error Records" />
+		<logger level="INFO" doc:name="Logger" doc:id="11e81ba6-c535-4f08-a45a-e5033ee7edc0" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10; "Error Records --->": vars.errorRecords&#10;}]'/>
+		
+		<foreach doc:name="For Each Error Record" doc:id="144a198e-e672-4134-aab5-0ec4f4920449" collection="#[vars.errorRecords]">
+		    <ee:transform doc:name="Transform Message" doc:id="2a985dd9-6fc3-4f89-a522-049b00246238" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.errorRecords map ((item, index) -> {
+    "LastName": item.lastName,
+    "Error__c":"Invalid"
+})]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="e342c794-7cfc-4322-a3f4-4a409566ead7" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	"3rd Transform ---&gt;":vars.errorRecords,&#10;	"3rd Transform payload---&gt;":payload&#10;}]'/>
+			<salesforce:create doc:name="Create Error Record" doc:id="f41c3de5-6d47-4e2c-9855-5f3622a85c5c" config-ref="Salesforce_Config" type="Contact">
+		        <salesforce:records><![CDATA[#[payload]]]></salesforce:records>
+		    </salesforce:create>
+		
+</foreach>
+
+	</flow>
+</mule>

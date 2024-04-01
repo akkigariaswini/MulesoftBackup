@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="ee53af03-7b4d-40de-9be4-7fbc0c5b2c49" >
+		<salesforce:basic-connection username="akkigariaswini33@gmail.com" password="Aswini@2001" securityToken="Wxsl56GLiPn2pseAX992eT01" url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<salesforce:sfdc-config name="Salesforce_Config1" doc:name="Salesforce Config" doc:id="17723c19-96a4-480e-89ca-2188cb96d1e1" >
+		<salesforce:basic-connection username="akkigariaswini33@gmail.com" password="Aswini@2001" securityToken="Wxsl56GLiPn2pseAX992eT01" url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="6b453b0b-36cd-4766-ba89-74feff390383" >
+		<http:request-connection protocol="HTTPS" host="portal.kairakitchen.com" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="c3a2c31c-b1f7-499a-a5f5-75f455c1b407" >
+		<http:request-connection protocol="HTTPS" host="portal.kairakitchen.com" />
+	</http:request-config>
+	<flow name="chages_reflect_kirakitchenFlow" doc:id="57869d9f-ac18-4a91-8536-9eeae0f274a3" >
+		<salesforce:subscribe-channel-listener doc:name="Subscribe channel listener" doc:id="c4ace2e9-0ccb-4a8d-9af0-28a1175451db" config-ref="Salesforce_Config" streamingChannel="/data/ContactChangeEvent"/>
+		<logger level="INFO" doc:name="Logger" doc:id="35ccbe16-03ee-4fe7-bd92-69ac7cf12e83" message="#[%dw 2.0&#10;output application/json &#10;---&#10;payload]"/>
+		<choice doc:name="Choice" doc:id="e48f5e2a-47f3-415c-988e-9c51bf1788b3" >
+			<when expression='#[payload.data.payload.ChangeEventHeader.changeType == "UPDATE" &#10;and (indexOf(payload.data.payload.ChangeEventHeader.changedFields, "Name.FirstName") &gt;=0 &#10;	or indexOf(payload.data.payload.ChangeEventHeader.changedFields, "Name.LastName") &gt;=0 or&#10;	 indexOf(payload.data.payload.ChangeEventHeader.changedFields, "Email") &gt;=0&#10;	  or indexOf(payload.data.payload.ChangeEventHeader.changedFields, "Phone") &gt;=0&#10;)]'>
+				<salesforce:query doc:name="Query" doc:id="3b51c3f2-a907-4578-9687-467b4cb1db65" config-ref="Salesforce_Config1">
+					<salesforce:salesforce-query ><![CDATA[Select Id,AuraComponents__legacy_id__c,LastName,FirstName,AuraComponents__branch__c,Email,Phone,MailingCity from Contact where Id = ':recordIds' AND AuraComponents__legacy_id__c != Null
+]]></salesforce:salesforce-query>
+					<salesforce:parameters ><![CDATA[#[%dw 2.0
+output application/json 
+---
+{
+	"recordIds" : payload.data.payload.ChangeEventHeader.recordIds[0]
+}]]]></salesforce:parameters>
+				</salesforce:query>
+				<logger level="INFO" doc:name="Logger" doc:id="9e68880b-8d70-4bc9-8802-96252a429dfa" message='#[%dw 2.0&#10;output application/json &#10;---&#10;{&#10;	"salesforce select Query Run--&gt;" :payload&#10;}]'/>
+				<choice doc:name="Choice" doc:id="049815bc-3f44-4bc5-b9a0-a592616e7f85">
+			<when expression="!isEmpty(payload)">
+				<ee:transform doc:name="Transform Message" doc:id="2391a635-2c11-4e66-93c9-4a2d2f8f5da6">
+					<ee:message>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="dataforupdate"><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"id" : payload[0].AuraComponents__legacy_id__c,
+	"firstname" : payload[0].FirstName,
+	"lastname" :payload[0].LastName,
+	"city" :payload[0].MailingCity,
+	"email" :payload[0].Email,
+	"location" :payload[0].AuraComponents__branch__c,
+	"street": payload[0].MailingStreet,
+	"phone" : payload[0].Phone
+	
+	
+	
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="d9529571-133d-4f3a-a924-2914c189c533" message='#[%dw 2.0&#10;output application/json &#10;---&#10;{&#10;	"payload after transform run --&gt;" :payload&#10;}]' />
+				<http:request method="POST" doc:name="Request" doc:id="b76b8f5e-b16d-4e9e-a0fe-26ab2fcc9d3b" config-ref="HTTP_Request_configuration" path="/ibs/api/auth/login ">
+					<http:body><![CDATA[#[output application/json
+---
+{
+	"password" : "Admin@123",
+	"email" : "zakir@gmail.com"
+		
+}]]]></http:body>
+				</http:request>
+				<http:request method="PUT" doc:name="Request" doc:id="1a764f87-5933-4fe3-826f-82974045521c" config-ref="HTTP_Request_configuration1" path='#["/ibs/api/contacts/" ++ vars.dataforupdate.id]'>
+					<http:body><![CDATA[#[vars.dataforupdate]]]></http:body>
+					<http:headers><![CDATA[#[output application/json
+---
+{
+  "Authorization" :payload.authToken
+}]]]></http:headers>
+				</http:request>
+				<logger level="INFO" doc:name="Logger" doc:id="07a4683e-491b-4afb-95c9-6fd768a8e8e3" message='#[%dw 2.0&#10;output application/json &#10;---&#10;{&#10;	"updated results --&gt;" :vars.dataforupdate,&#10;	"payload" : payload&#10;}]' />
+			</when>
+		</choice>
+			</when>
+		</choice>
+	</flow>
+</mule>

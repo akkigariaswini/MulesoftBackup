@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="Account_id" format="json">
+      <types:shape format="weave" example="examples/TestMuleSoft.json"><![CDATA[%dw 2.0
+
+type Account_id = Array<{|  name: String,   billingCity: String|}> {"example": "[{\\\"name\\\":\\\"Test 1\\\",\\\"billingCity\\\":\\\"Kurnool\\\"},{\\\"name\\\":\\\"Test 2\\\",\\\"billingCity\\\":\\\"Kadapa\\\"},{\\\"name\\\":\\\"Test 3\\\",\\\"billingCity\\\":\\\"Namdyal\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#4f2504c5-68b0-4fd2-9e63-de5b456abe25">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Account_id"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

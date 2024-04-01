@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="42ab4c5f-2daf-49ff-8d83-d5d566efacc8" >
+		<http:listener-connection host="0.0.0.0" port="8086"/>
+	</http:listener-config>
+	<flow name="dynamic_flowFlow" doc:id="5c08e867-889c-46c1-8331-ad3eeddf5c39" >
+		<http:listener doc:name="Listener" doc:id="54b991dc-0549-4f07-8156-5f2937f147e4" config-ref="HTTP_Listener_config" path="/dynamicflow"/>
+		<ee:transform doc:name="Transform Message" doc:id="72e23c1c-b577-4b4d-aaa9-374d0873cc25" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="flowName" ><![CDATA[%dw 2.0
+output application/java
+---
+if(payload.Ticket == "Check")
+ "checkTicketAvailability"
+ else if(payload.Ticket == "book")
+ "BookTicket"
+ else if(payload.Ticket == "cancel")
+ "cancelTicket"
+ else (null)]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="f5455bc7-0728-44d6-a51a-d522be6f3d08" name="#[vars.flowName]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="6e4e703a-194f-46af-bf25-ecfafc46ee44" message="final logget"/>
+	</flow>
+	<sub-flow name="BookTicket" doc:id="eb3cd8b7-d280-4581-918c-660f09873d6b" >
+		<logger level="INFO" doc:name="Logger" doc:id="b0d8a8ea-0a7e-4047-bb95-fe2a15ce6ee7" message="Your Tickets bookd successfully"/>
+	</sub-flow>
+	<sub-flow name="checkTicketAvailability" doc:id="792e81d2-04ef-49e9-9c0d-3c766dc8ff5c" >
+		<logger level="INFO" doc:name="Logger" doc:id="4e347c27-589d-41d8-9561-b363615f6259" message="your tickets are available and you can book"/>
+	</sub-flow>
+	<sub-flow name="cancelTicket" doc:id="ccd0bc5f-a787-4ae7-be59-ba47e444209f" >
+		<logger level="INFO" doc:name="Logger" doc:id="ee3a8922-4df6-4533-9bcf-f223358e6475" message="Your can cancellation is avaibale."/>
+	</sub-flow>
+</mule>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="0a2a74df-850f-4e6e-94dc-7d99337a4b12" />
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="9f882afa-ee73-4921-b232-250923ebe1c5" >
+		<salesforce:basic-connection username="${http.salesforce.userName}" password="${http.salesforce.Password}" securityToken="${http.salesforce.securityToken}"/>
+	</salesforce:sfdc-config>
+	<ftp:config name="FTP_Config" doc:name="FTP Config" doc:id="b333172d-6c3b-4e87-9c75-34ce7df9c680" >
+		<ftp:connection host="localhost" username="Test-User2" password="Test-User2" />
+	</ftp:config>
+	<flow name="propertyfile_contactcreationFlow" doc:id="000d6680-6545-4884-9079-82570a485df0" >
+		<salesforce:subscribe-channel-listener doc:name="Subscribe channel listener" doc:id="b0220231-7e18-42fe-938f-5cf42c86a8d2" config-ref="Salesforce_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="15a31a16-136c-4dff-ba1d-9c3e429e4f03" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ftp:write doc:name="Write" doc:id="b6888753-874d-4ada-9808-380c7e7a99e7" config-ref="FTP_Config" path='"/" ++ payload[0].FirstName ++ "_" ++ payload[0].LastName ++ ".csv"'/>
+	</flow>
+</mule>

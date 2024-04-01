@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="8311838c-6518-4cad-96be-b3fa49af8aab" >
+		<http:listener-connection host="0.0.0.0" port="8083" />
+	</http:listener-config>
+	<flow name="practiceFlow" doc:id="633e1c8d-8f36-4d0e-bba1-fe5c3aa7c8cf" >
+		<http:listener doc:name="Listener" doc:id="2643e38c-0ab1-47ce-9433-68e30d26324b" config-ref="HTTP_Listener_config" path="/tests" />
+		<ee:transform doc:name="Transform Message" doc:id="9d15be8e-a2b1-4bc2-8ea3-9eba5b08ecb5">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[
+  {
+    "studentId": "1111",
+    "lastName": "test222",
+    "disability": "DIs20"
+  },
+  {
+    "studentId": "2222",
+    "lastName": "test333",
+    "disability": "DIs21"
+    
+  },
+  {
+    "studentId": "3333",
+    "lastName": "test444",
+    "disability": "DIs22"
+    
+  },
+  {
+    "studentId": "4444",
+    "lastName": "test555",
+    "disability": "DIs23"
+  }
+ 
+  ]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="4954553f-5c96-4540-a582-30b1fabc6bb5" collection='payload' batchSize="2">
+			<logger level="INFO" doc:name="Logger" doc:id="c4b2e4a7-e715-41d5-8111-957e8fcc1a63" message="#[payload]"/>
+		</foreach>
+		<logger level="TRACE" doc:name="Logger" doc:id="04ffeb23-0888-4846-8003-f3e7299e7a58" message='#[%dw 2.0&#10;output application/json&#10;---&#10;"final--&gt;"  : payload]' />
+	</flow>
+</mule>

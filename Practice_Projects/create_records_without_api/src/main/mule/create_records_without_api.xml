@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="0f9191da-bbde-4f74-b74a-53265840d4e8" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="ab22abc3-f429-4c96-b784-15519094e065" >
+		<salesforce:basic-connection username="akkigariaswini33@gmail.com" password="Aswini@2001" securityToken="Wxsl56GLiPn2pseAX992eT01" url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="82ce26d7-cf5d-4ebe-a18b-09a244f6a8cf" >
+		<vm:queues >
+			<vm:queue queueName="error" queueType="PERSISTENT" />
+		</vm:queues>
+	</vm:config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="d3d67576-b6c0-482b-9385-cfbeb2ddb2ba" >
+		<file:connection workingDir="C:\Users\ibirds\Desktop\Learning\succesrecords" />
+	</file:config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="1dd27f01-f946-4211-ad4d-1af9e31ccef6" >
+		<file:connection workingDir="C:\Users\ibirds\Desktop\Learning\succesrecords" />
+	</file:config>
+	<flow name="create_records_without_apiFlow" doc:id="ae3c18e2-b68d-45da-ac4d-79e4970c0518" >
+		<http:listener doc:name="Listener" doc:id="91b4be54-dfc4-4c16-a5e3-ee26091c580d" config-ref="HTTP_Listener_config" path="/CreateRecords"/>
+		<ee:transform doc:name="Transform Message" doc:id="53730a46-3f5d-4e21-b17d-248f4524ca9f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json 
+---
+payload map (item,index) ->
+{
+	"AuraComponents__studentId__c" : item.studentId,
+	"LastName" :item.lastName,
+	"AuraComponents__disability__c":item.disability,
+	"AuraComponents__flexible_attendance__c":item.flexible_attendance,
+	"AuraComponents__StudentVisaProxy__c":item.StudentVisaProxy,
+	"AuraComponents__CurrentConsecutiveMissedPointsOfContact__c":item.CurrentConsecutiveMissedPointsOfContact,
+	"AuraComponents__PercentAttendanceLast4Weeks__c":item.PercentAttendanceLast4Weeks,
+	"AuraComponents__AuthorizedAbsences__c":item.AuthorizedAbsences,
+	"AuraComponents__PercentAttendanceYear__c":item.PercentAttendanceYear
+	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create doc:name="Create" doc:id="4362debe-5a6a-4c25-b621-f15c454288bc" config-ref="Salesforce_Config" type="Contact">
+		</salesforce:create>
+		<logger level="INFO" doc:name="Logger" doc:id="fe15f409-f543-408f-a920-4eab19534afc" message='#[output application/json&#10;---&#10;{&#10;	"payload--&gt;": payload,&#10;	"payload--&gt;": payload.successful,&#10;}]' />
+		<ee:transform doc:name="Transform Message" doc:id="917b9f4a-c8cb-4bd6-89d8-43cc2065fa69" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+	payload.items.payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="99c34086-c48b-4946-94ef-439fb8bd5967" message='#[output application/json&#10;---&#10;{&#10;	"suceesrecords--&gt;": payload,&#10;	&#10;}]'/>
+		<ee:transform doc:name="Transform Message" doc:id="d649b64b-081e-478f-9ed7-c3170c4f7e83" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload filter ($.successful == false)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="840d2726-b9aa-43a7-aefc-9002bfd5ed36" message='#[output application/json&#10;---&#10;{&#10;	"failure--&gt;": payload,&#10;	&#10;}]'/>
+	
+</flow>
+</mule>
